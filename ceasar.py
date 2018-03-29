@@ -1,38 +1,34 @@
+#!/usr/bin/python3
 import argparse
-
-
-def getkey():
-    key = input("Enter the shift amount (0 - 25): ")
+from wordlist import getWordList
 
 def encode(message, key):
     ciphertext = str()
     for char in message.lower():
-        nc = chr((ord(char) - ord('a') + key) % 26 + ord('a'))
+        if char != ' ':
+            nc = chr((ord(char) - ord('a') + key) % 26 + ord('a'))
+        else:
+            nc = ' '
         ciphertext += nc
     return ciphertext
-
-def getdefaultdict(minlen = 4):
-    dictionary = list()
-    with open("words.txt") as f:
-        for line in f.readlines():
-            if (len(line) > minlen):
-                dictionary.append(line[:-1])
-    return dictionary 
 
 def decode(cyphertext, key):
     text = str()
     for char in cyphertext:
-        nc = chr((ord(char) - ord('a') - key + 26) % 26 + ord('a'))
+        if char != ' ':
+            nc = chr((ord(char) - ord('a') - key + 26) % 26 + ord('a'))
+        else:
+            nc = ' '
         text += nc
     return text
 
-def crack(cyphertext, dictionary = getdefaultdict()):
+def crack(cyphertext, wordList = getWordList()):
     decoded = list()
     solutions = list()
     for i in range(0, 26):
         text = decode(cyphertext, i)
         decoded.append((i, text))
-        for word in dictionary:
+        for word in wordList:
             if word in text:
                 solutions.append((i, text))
                 break
@@ -48,10 +44,11 @@ if __name__ == "__main__":
     group.add_argument('-d', '--decode', nargs=2, metavar=('cyphertext', 'key'))
     group.add_argument('-c', '--crack', nargs=1, metavar='cyphertext')
     parser.add_argument('--min-word-size', type=int, default=4, metavar='num')
+    parser.add_argument('--word-list', type=str, default='words.txt')
     args = parser.parse_args()
     if (args.encode is not None):
         print(encode(args.encode[0], int(args.encode[1])))
     elif (args.decode is not None):
         print(decode(args.decode[0], int(args.decode[1])))
     elif (args.crack is not None):
-        print(crack(args.crack[0], getdefaultdict(args.min_word_size)))
+        print(crack(args.crack[0], getWordList(wordLen=args.min_word_size)))
